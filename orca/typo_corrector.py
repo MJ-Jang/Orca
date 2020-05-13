@@ -16,6 +16,7 @@ import numpy as np
 import math
 
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 
 class OrcaTypoCorrector:
@@ -53,8 +54,7 @@ class OrcaTypoCorrector:
 
         for epoch in range(num_epochs):
             total_loss = 0
-            print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
-            for context, target in dataloader:
+            for context, target in tqdm(dataloader, desc='batch progress'):
                 # Remember PyTorch accumulates gradients; zero them out
                 self.model.zero_grad()
 
@@ -72,6 +72,7 @@ class OrcaTypoCorrector:
                 if total_loss <= best_loss:
                     best_loss = total_loss
                     self.save_dict(save_path=save_path, model_prefix=model_prefix)
+            print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
 
     def save_dict(self, save_path: str, model_prefix: str):
         os.makedirs(save_path, exist_ok=True)
