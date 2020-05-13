@@ -17,7 +17,7 @@
 
 import random
 
-with open('data/test_data.txt', 'r', encoding='utf-8') as file:
+with open('../data/test_data.txt', 'r', encoding='utf-8') as file:
     data = file.readlines()
 tr_data = [s.strip() for s in data]
 
@@ -28,8 +28,8 @@ model = OrcaTypoCorrector(256, 128)
 
 train_config = {
     'window_size': 5,
-    'batch_size': 64,
-    'num_epochs': 60,
+    'batch_size': 128,
+    'num_epochs': 500,
     'lr': 0.01,
     'save_path': 'example/',
     'model_prefix': 'test'
