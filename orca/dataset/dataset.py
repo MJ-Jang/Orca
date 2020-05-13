@@ -5,6 +5,7 @@ from __future__ import unicode_literals, print_function, division
 
 from orca.tokenizer import CharacterTokenizer
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 import numpy as np
 
@@ -21,7 +22,7 @@ class KORTypoDataset(Dataset):
         self.vocab_size = len(self.tokenizer)
         self.data = []
 
-        for s in sents:
+        for s in tqdm(sents):
             token = self.tokenizer.text_to_idx(s)
             token = [self.tokenizer.pad_id] * window_size + token + [self.tokenizer.pad_id] * window_size
             for i in range(window_size, len(token) - window_size):
