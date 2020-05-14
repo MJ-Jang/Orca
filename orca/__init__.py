@@ -1,1 +1,1 @@
-from .typo_corrector import OrcaTypoCorrector
+from .typo_corrector import CBOWTypoCorrector, TextCNNTypoCorrector

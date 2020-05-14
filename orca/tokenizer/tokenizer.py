@@ -10,7 +10,10 @@ class CharacterTokenizer:
 
         self.unk = "<unk>"
         self.pad = '<pad>'
-        self.c_list = [self.pad, self.unk] + KOR_CHAR_PATTERN + ENG_CHAR_PATTERN + NUMBER_PATTERN + SYMBOL_PATTERN
+        self.c_list = [self.pad, self.unk] + KOR_CHAR_JA_BOTH_PATTERN + KOR_CHAR_JA_UNDER_PATTERN\
+                      + KOR_CHAR_MO_PATTERN + ENG_CHAR_UP_PATTERN\
+                      + ENG_CHAR_LOW_PATTERN + NUMBER_PATTERN + SYMBOL_PATTERN
+
         self.tok_to_id_dict = {}
         self.id_to_tok_dict = {}
 

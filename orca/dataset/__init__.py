@@ -1,1 +1,1 @@
-from .dataset import KORTypoDataset
+from .dataset import CBOWTypoDataset, TextCNNDataset

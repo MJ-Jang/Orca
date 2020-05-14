@@ -3,9 +3,10 @@
 
 from __future__ import unicode_literals, print_function, division
 
-from orca.module import CBOW
+from orca.module import CBOW, TextCNN
 from orca.tokenizer import CharacterTokenizer
-from orca.dataset import KORTypoDataset
+from orca.dataset import CBOWTypoDataset, TextCNNDataset
+from orca.abstract import TypoCorrecter
 
 import torch
 import torch.nn as nn
@@ -19,9 +20,70 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-class OrcaTypoCorrector:
+class TextCNNTypoCorrector(TypoCorrecter):
+
+    def __init__(self, embedding_dim: int, hidden_dim: int, use_gpu: bool = True, **kwargs):
+        self.device = 'cuda:0' if torch.cuda.is_available() and use_gpu else 'cpu'
+
+        self.tokenizer = CharacterTokenizer()
+        vocab_size = len(self.tokenizer)
+
+        self.model_conf = {
+            'vocab_size': vocab_size,
+            'embedding_dim': embedding_dim,
+            'hidden_dim': hidden_dim
+        }
+        self.model = TextCNN(**self.model_conf).to(self.device)
+
+    def train(self,
+              sents: list,
+              batch_size: int,
+              num_epochs: int,
+              lr: float,
+              save_path: str,
+              model_prefix: str,
+              **kwargs
+              ):
+
+        optimizer = optim.SGD(self.model.parameters(), lr=lr)
+
+        dataset = TextCNNDataset(sents, kwargs['max_len'], kwargs['threshold'], kwargs['noise_char_ratio'])
+        dataloader = DataLoader(dataset, batch_size=batch_size)
+
+        loss_function = nn.NLLLoss()
+        best_loss = 1e5
+
+        for epoch in range(num_epochs):
+            total_loss = 0
+            for context, target in tqdm(dataloader, desc='batch progress'):
+                # Remember PyTorch accumulates gradients; zero them out
+                self.model.zero_grad()
+
+                context = context.to(self.device)
+                target = target.to(self.device)
+
+                nll_prob = self.model(context)
+                print(target.size())
+                print(nll_prob.size())
+                loss = loss_function(nll_prob, target)
+
+                # backpropagation
+                loss.backward()
+                # update the parameters
+                optimizer.step()
+                total_loss += loss.item() / batch_size
+                if total_loss <= best_loss:
+                    best_loss = total_loss
+                    self.save_dict(save_path=save_path, model_prefix=model_prefix)
+            print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
+
+    def infer(self, sent: list, **kwargs):
+        pass
+
+###
+class CBOWTypoCorrector:
     def __init__(self, embedding_dim: int, fc_dim: int, use_gpu: bool = False):
-        super(OrcaTypoCorrector, self).__init__()
+        super(CBOWTypoCorrector, self).__init__()
 
         self.device = 'cuda:0' if torch.cuda.is_available() and use_gpu else 'cpu'
 
@@ -46,7 +108,7 @@ class OrcaTypoCorrector:
 
         optimizer = optim.SGD(self.model.parameters(), lr=lr)
 
-        dataset = KORTypoDataset(sents, window_size)
+        dataset = CBOWTypoDataset(sents, window_size)
         dataloader = DataLoader(dataset, batch_size=batch_size)
 
         loss_function = nn.NLLLoss()
