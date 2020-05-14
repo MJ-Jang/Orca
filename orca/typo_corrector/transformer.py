@@ -9,12 +9,12 @@ from orca.dataset import TextCNNDataset
 from orca.abstract import TypoCorrecter
 
 import torch
-import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 import dill
+import matplotlib.pyplot as plt
 
 from torch.utils.data import DataLoader
-import torch.nn.functional as F
 from tqdm import tqdm
 
 
@@ -64,7 +64,7 @@ class TransformerTypoCorrector(TypoCorrecter):
 
         for epoch in range(num_epochs):
             total_loss = 0
-            for context, target in tqdm(dataloader, desc='batch progress'):
+            for i, (context, target) in enumerate(tqdm(dataloader, desc='batch progress')):
                 # Remember PyTorch accumulates gradients; zero them out
                 self.model.zero_grad()
 
@@ -79,7 +79,10 @@ class TransformerTypoCorrector(TypoCorrecter):
                 loss.backward()
                 # update the parameters
                 optimizer.step()
-                total_loss += loss.item() / batch_size
+                total_loss += loss.item()
+                if i == 0:
+                    print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
+
                 if total_loss <= best_loss:
                     best_loss = total_loss
                     self.save_dict(save_path=save_path, model_prefix=model_prefix)
