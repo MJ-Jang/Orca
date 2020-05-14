@@ -80,12 +80,11 @@ class TransformerTypoCorrector(TypoCorrecter):
                 # update the parameters
                 optimizer.step()
                 total_loss += loss.item()
-                if i == 0:
-                    print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
 
-                if total_loss <= best_loss:
-                    best_loss = total_loss
-                    self.save_dict(save_path=save_path, model_prefix=model_prefix)
+            if total_loss <= best_loss:
+                best_loss = total_loss
+                self.save_dict(save_path=save_path, model_prefix=model_prefix)
+
             print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
 
     def infer(self, sent: str, **kwargs):
