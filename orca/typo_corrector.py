@@ -45,7 +45,7 @@ class TextCNNTypoCorrector(TypoCorrecter):
               **kwargs
               ):
 
-        optimizer = optim.SGD(self.model.parameters(), lr=lr)
+        optimizer = optim.Adam(self.model.parameters(), lr=lr)
 
         dataset = TextCNNDataset(sents, kwargs['max_len'], kwargs['threshold'], kwargs['noise_char_ratio'])
         dataloader = DataLoader(dataset, batch_size=batch_size)
