@@ -63,8 +63,6 @@ class TextCNNTypoCorrector(TypoCorrecter):
                 target = target.to(self.device)
 
                 nll_prob = self.model(context)
-                print(target.size())
-                print(nll_prob.size())
                 loss = loss_function(nll_prob, target)
 
                 # backpropagation
