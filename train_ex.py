@@ -35,9 +35,9 @@ from orca import TransformerTypoCorrector
 model = TransformerTypoCorrector(d_model=256, n_head=8, n_layers=3, dim_ff=128, dropout=0.4)
 
 train_config = {
-    'batch_size': 128,
-    'num_epochs': 50,
-    'lr': 0.001,
+    'batch_size': 256,
+    'num_epochs': 100,
+    'lr': 0.0005,
     'save_path': 'example/',
     'model_prefix': 'test_transformer',
     'max_len': 150,
