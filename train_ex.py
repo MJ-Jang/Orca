@@ -7,13 +7,13 @@ tr_data = [s.strip() for s in data]
 random.shuffle(tr_data)
 
 from orca import TextCNNTypoCorrector
-model = TextCNNTypoCorrector(256, 128)
+model = TextCNNTypoCorrector(256, 256)
 
 
 train_config = {
-    'batch_size': 128,
-    'num_epochs': 50,
-    'lr': 0.01,
+    'batch_size': 512,
+    'num_epochs': 500,
+    'lr': 0.001,
     'save_path': 'example/',
     'model_prefix': 'test_cnn',
     'max_len': 150,
