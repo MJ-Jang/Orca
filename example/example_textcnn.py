@@ -9,18 +9,19 @@ random.shuffle(tr_data)
 from orca import TextCNNTypoCorrector
 model = TextCNNTypoCorrector(256, 128)
 
-#
-# train_config = {
-#     'batch_size': 128,
-#     'num_epochs': 50,
-#     'lr': 0.01,
-#     'save_path': 'example/',
-#     'model_prefix': 'test_cnn',
-#     'max_len': 150,
-#     'threshold': 0.3,
-#     'noise_char_ratio': 0.05
-# }
-#
-# model.train(tr_data, **train_config)
-model.load_model(model_path='example/test_cnn.modeldict')
-model.infer('내일부터 일시정쥬 부탁합니다', threshold=0.2)
+
+train_config = {
+    'batch_size': 128,
+    'num_epochs': 50,
+    'lr': 0.01,
+    'save_path': 'example/',
+    'model_prefix': 'test_cnn',
+    'max_len': 150,
+    'threshold': 0.3,
+    'noise_char_ratio': 0.05
+}
+
+model.train(tr_data, **train_config)
+
+# model.load_model(model_path='example/test_cnn.modeldict')
+# model.infer('내일부터 일시정쥬 부탁합니다', threshold=0.2)

@@ -10,6 +10,7 @@ from orca.abstract import TypoCorrecter
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import dill
 
@@ -25,6 +26,7 @@ class TextCNNTypoCorrector(TypoCorrecter):
 
         self.tokenizer = CharacterTokenizer()
         vocab_size = len(self.tokenizer)
+        self.pad_id = self.tokenizer.pad_id
 
         self.model_conf = {
             'vocab_size': vocab_size,
@@ -48,7 +50,6 @@ class TextCNNTypoCorrector(TypoCorrecter):
         dataset = TextCNNDataset(sents, kwargs['max_len'], kwargs['threshold'], kwargs['noise_char_ratio'])
         dataloader = DataLoader(dataset, batch_size=batch_size)
 
-        loss_function = nn.NLLLoss()
         best_loss = 1e5
 
         for epoch in range(num_epochs):
@@ -60,9 +61,9 @@ class TextCNNTypoCorrector(TypoCorrecter):
                 context = context.to(self.device)
                 target = target.to(self.device)
 
-                nll_prob = self.model(context)
-                loss = loss_function(nll_prob, target)
-
+                logits = self.model(context)
+                loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), target.reshape(-1),
+                                       ignore_index=self.pad_id)
                 # backpropagation
                 loss.backward()
                 # update the parameters
