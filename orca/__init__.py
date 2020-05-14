@@ -1,1 +1,1 @@
-from .typo_corrector import CBOWTypoCorrector, TextCNNTypoCorrector
+from .typo_corrector import TransformerTypoCorrector, TextCNNTypoCorrector

@@ -38,13 +38,7 @@ class TypoCorrecter(object):
 
     @abc.abstractmethod
     def load_model(self, model_path: str):
-        if model_path:
-            with open(model_path, 'rb') as modelFile:
-                model_dict = dill.load(modelFile)
-            self.model_conf = model_dict['model_conf']
-            self.model = self.model_class(**self.model_conf)
-            self.model.load_state_dict(model_dict["model_params"])
-            self.model.to(self.device)
+        pass
 
     @abc.abstractmethod
     def save_dict(self, save_path: str, model_prefix: str):
