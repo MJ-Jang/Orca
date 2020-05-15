@@ -2,4 +2,4 @@ dill
 torch
 tqdm
 editdistance
-difflib
+konlpy
