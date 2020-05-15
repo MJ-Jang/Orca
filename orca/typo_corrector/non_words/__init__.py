@@ -1,1 +1,1 @@
-from .edit_distance import EditDistTypoCorrecter
+from .edit_dist import EditDistTypoCorrecter
