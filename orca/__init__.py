@@ -1,1 +1,1 @@
-from .typo_corrector import TransformerTypoCorrector, TextCNNTypoCorrector
+from .typo_corrector.non_words import EditDistTypoCorrecter
