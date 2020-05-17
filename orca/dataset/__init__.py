@@ -1,1 +1,1 @@
-from .dataset import CBOWTypoDataset, TextCNNDataset
+from .dataset import TypoDetectionDataset

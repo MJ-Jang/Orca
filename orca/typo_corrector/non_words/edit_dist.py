@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals, print_function, division
 
-from orca.abstract import TypoCorrecter
+from orca.abstract import Module
 from orca.tokenizer import CharacterTokenizer
 from konlpy.tag import Okt, Kkma, Komoran, Hannanum, Mecab
 from tqdm import tqdm
@@ -18,7 +18,7 @@ import difflib
 import re
 
 
-class EditDistTypoCorrecter(TypoCorrecter):
+class EditDistTypoCorrecter(Module):
     def __init__(self, word_dict: dict = None, tokenizer: Text = 'Okt'):
         # use konlpy Okt tokenzer as base
         if tokenizer not in ['Okt', 'Kkma', 'Komoran', 'Hannanum']:

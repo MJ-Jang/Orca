@@ -10,6 +10,46 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 
 import numpy as np
+import random
+
+
+class TypoDetectionDataset(Dataset):
+
+    def __init__(self,
+                 sents: list,
+                 typo_num: int = 2,
+                 max_len: int = 20
+                 ) -> None:
+
+        self.tokenizer = CharacterTokenizer()
+        self.vocab_size = len(self.tokenizer)
+        words = set()
+
+        for s in tqdm(sents, desc='splitting words'):
+            for w in s.split('\n'):
+                words.add(w)
+
+        self.words = list(words)
+        self.typo_nu = typo_num
+        self.max_len = max_len
+        self.pad_id = self.tokenizer.pad_id
+
+    def __len__(self):
+        return len(self.words)
+
+    def __getitem__(self, item):
+        word = self.words[item]
+        y = 0
+        if random.random() <= 0.5:
+            _, word = noise_maker(word, 1.0, self.typo_nu)
+            y = 1
+        token = self.tokenizer.text_to_idx(word)
+
+        if len(token) <= self.max_len:
+            token += [self.pad_id] * (self.max_len - len(token))
+        else:
+            token = token[:self.max_len]
+        return np.array(token), y
 
 
 class CBOWTypoDataset(Dataset):

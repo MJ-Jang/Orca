@@ -9,7 +9,7 @@ import dill
 from orca.tokenizer import CharacterTokenizer
 
 
-class TypoCorrecter(object):
+class Module(object):
     """
     Abstract class for TypoCorrector
     """

@@ -17,7 +17,7 @@ for pattern in [KOR_CHAR_JA_BOTH_PATTERN, KOR_CHAR_JA_UNDER_PATTERN, KOR_CHAR_MO
         noise_dict[s] = pattern[:i] + pattern[i+1:]
 
 
-def noise_maker(text: str, threshold: float = 0.3, noise_char_ratio: float = 0.05):
+def noise_maker(text: str, threshold: float = 0.3, noise_char_num: int = 2):
     assert threshold >= 0
     assert threshold <= 1
 
@@ -27,7 +27,7 @@ def noise_maker(text: str, threshold: float = 0.3, noise_char_ratio: float = 0.0
     if rand >= threshold:
         return text_tokenized, text
     else:
-        rand_idx = random.sample(range(len(text_tokenized)), int(len(text_tokenized) * noise_char_ratio))
+        rand_idx = random.sample(range(len(text_tokenized)), min(len(text_tokenized), noise_char_num))
         for idx in rand_idx:
             if text_tokenized[idx] in list(noise_dict.keys()):
                 text_tokenized[idx] = random.choice(noise_dict[text_tokenized[idx]])

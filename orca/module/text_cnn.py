@@ -29,15 +29,16 @@ class PositionalEncoding(nn.Module):
 
 
 class TextCNN(nn.Module):
-    def __init__(self, vocab_size: int, embedding_dim: int, hidden_dim: int):
+    def __init__(self, vocab_size: int, embedding_dim: int, hidden_dim: int, n_class: int):
         super(TextCNN, self).__init__()
         self.pe = PositionalEncoding(embedding_dim)
         self.embeddings = nn.Embedding(vocab_size, embedding_dim)
 
         self.enc = nn.Sequential(
-            conv_block(embedding_dim, hidden_dim, 3),
+            conv_block(embedding_dim, hidden_dim, 4),
             conv_block(hidden_dim, hidden_dim, 3),
-            conv_block(hidden_dim, vocab_size, 3)
+            conv_block(hidden_dim, hidden_dim, 3),
+            conv_block(hidden_dim, n_class, 1)
         )
 
     def forward(self, inputs):
@@ -45,8 +46,9 @@ class TextCNN(nn.Module):
         embeds += self.pe(embeds)  # (N * S * E)
         embeds = embeds.transpose(2, 1)
         out = self.enc(embeds)
+        out = out.mean(dim=-1)
         nll_prob = F.log_softmax(out, dim=-1)
-        # return: [N * Vocab_Size * S ]
+        # return: [N * n_class]
         return nll_prob
 
 
