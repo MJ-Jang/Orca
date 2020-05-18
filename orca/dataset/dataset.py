@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 import numpy as np
 import random
+import re
 
 
 class TypoDetectionDataset(Dataset):
@@ -27,7 +28,8 @@ class TypoDetectionDataset(Dataset):
 
         for s in tqdm(sents, desc='splitting words'):
             for w in s.split('\n'):
-                words.add(w)
+                if self.is_ko_word(w):
+                    words.add(w)
 
         self.words = list(words)
         self.typo_nu = typo_num
@@ -50,6 +52,22 @@ class TypoDetectionDataset(Dataset):
         else:
             token = token[:self.max_len]
         return np.array(token), y
+
+    @staticmethod
+    def is_ko_word(word: str):
+        match_number = re.match(pattern='\\d+', string=word)
+        match_eng = re.match(pattern='[a-zA-Z]+', string=word)
+        if len(word) <= 1:
+            return False
+        if match_eng:
+            s, e = match_eng.span()
+            if word == word[s:e]:
+                return False
+        if match_number:
+            s, e = match_number.span()
+            if word == word[s:e]:
+                return False
+        return True
 
 
 class CBOWTypoDataset(Dataset):
