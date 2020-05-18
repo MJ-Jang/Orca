@@ -21,7 +21,7 @@ class CharacterTokenizer:
 
         self.load(model_path)
 
-    def load(self, model_path: str = None):
+    def load(self, model_path: str = None, use_defalt: bool = True):
         if model_path:
             with open(model_path, 'rb') as tokFile:
                 model = dill.load(tokFile)
@@ -29,9 +29,15 @@ class CharacterTokenizer:
             self.idx2char = model['idx2char']
             self.c_list = list(self.char2idx.keys())
         else:
-            self.char2idx = {}
-            self.idx2char = {}
-            self.c_list = []
+            if use_defalt:
+                filename = 'char_tokenizer.model'
+                here = '/'.join(os.path.dirname(__file__).split('/')[:-1])
+                full_filename = os.path.join(here, "resources", filename)
+                self.load(full_filename)
+            else:
+                self.char2idx = {}
+                self.idx2char = {}
+                self.c_list = []
 
     def train(self, sents: list, min_count: int, save_path: str, model_prefix: str):
         chars = []
