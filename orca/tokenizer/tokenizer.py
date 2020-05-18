@@ -8,24 +8,30 @@ from collections import Counter
 
 
 class CharacterTokenizer:
-    def __init__(self):
+    def __init__(self, model_path: str = None):
         super(CharacterTokenizer, self).__init__()
 
         self.unk = "<unk>"
         self.pad = '<pad>'
         self.pre_tokens = [self.pad, self.unk]
 
-        self.tok_to_id_dict = {}
-        self.id_to_tok_dict = {}
+        self.char2idx = {}
+        self.idx2char = {}
+        self.c_list = []
 
-        self.load()
-        self.unk_id = self.tok_to_id_dict[self.unk]
-        self.pad_id = self.tok_to_id_dict[self.pad]
+        self.load(model_path)
 
-    def load(self,):
-        for i, c in enumerate(self.c_list):
-            self.tok_to_id_dict[c] = i
-            self.id_to_tok_dict[i] = c
+    def load(self, model_path: str = None):
+        if model_path:
+            with open(model_path, 'rb') as tokFile:
+                model = dill.load(tokFile)
+            self.char2idx = model['char2idx']
+            self.idx2char = model['idx2char']
+            self.c_list = list(self.char2idx.keys())
+        else:
+            self.char2idx = {}
+            self.idx2char = {}
+            self.c_list = []
 
     def train(self, sents: list, min_count: int, save_path: str, model_prefix: str):
         chars = []
@@ -49,7 +55,7 @@ class CharacterTokenizer:
         os.makedirs(save_path, exist_ok=True)
 
         model_name = os.path.join(save_path, model_prefix + ".model")
-        outp = {"char2idx": self.char2idx, self.idx2char: self.idx2char}
+        outp = {"char2idx": self.char2idx, 'idx2char': self.idx2char}
         with open(model_name, "wb") as file:
             dill.dump(outp, file)
 
