@@ -4,7 +4,7 @@
 from __future__ import unicode_literals, print_function, division
 
 from orca.abstract import Module
-from orca.tokenizer import CharacterTokenizer
+from orca.tokenizer import JasoTokenizer
 from konlpy.tag import Okt, Kkma, Komoran, Hannanum, Mecab
 from tqdm import tqdm
 from typing import Text
@@ -27,7 +27,7 @@ class EditDistTypoCorrecter(Module):
         self.tokenizer = eval(tokenizer + "()")
         self.tokenizer.morphs('test') # slow at first inference
 
-        self.chartok = CharacterTokenizer()
+        self.chartok = JasoTokenizer()
 
         self.word_dict = Counter(word_dict)
         self.word_dict_by_length = dict()

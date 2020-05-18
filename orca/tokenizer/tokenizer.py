@@ -1,12 +1,91 @@
 import dill
+import os
 
 from orca.tokenizer.pattern import *
 from orca.utils.hangeul import flat_hangeul, merge_flatted_hangeul
+from tqdm import tqdm
+from collections import Counter
 
 
 class CharacterTokenizer:
     def __init__(self):
         super(CharacterTokenizer, self).__init__()
+
+        self.unk = "<unk>"
+        self.pad = '<pad>'
+        self.pre_tokens = [self.pad, self.unk]
+
+        self.tok_to_id_dict = {}
+        self.id_to_tok_dict = {}
+
+        self.load()
+        self.unk_id = self.tok_to_id_dict[self.unk]
+        self.pad_id = self.tok_to_id_dict[self.pad]
+
+    def load(self,):
+        for i, c in enumerate(self.c_list):
+            self.tok_to_id_dict[c] = i
+            self.id_to_tok_dict[i] = c
+
+    def train(self, sents: list, min_count: int, save_path: str, model_prefix: str):
+        chars = []
+        for s in tqdm(sents, desc='processing corpus'):
+            chars += list(s)
+        counter = Counter(chars)
+
+        self.char2idx = {}
+        self.idx2char = {}
+
+        for v, k in enumerate(self.pre_tokens):
+            self.char2idx[k] = v
+            self.idx2char[v] = k
+
+        for i, key in enumerate(counter):
+            if counter[key] >= min_count:
+                self.char2idx[key] = len(self.char2idx)
+                self.idx2char[len(self.char2idx)] = key
+        self.c_list = list(self.char2idx.keys())
+
+        os.makedirs(save_path, exist_ok=True)
+
+        model_name = os.path.join(save_path, model_prefix + ".model")
+        outp = {"char2idx": self.char2idx, self.idx2char: self.idx2char}
+        with open(model_name, "wb") as file:
+            dill.dump(outp, file)
+
+    def tokenize(self, text, to_id=True):
+        if to_id:
+            res = list(text)
+            res = [self.char2idx[t] if t in self.c_list else self.char2idx[self.unk] for t in res]
+            return res
+        else:
+            return list(text)
+
+    @staticmethod
+    def text_to_token(text: str) -> list:
+        return list(text)
+
+    @staticmethod
+    def token_to_text(token: list) -> str:
+        return ''.join(token)
+
+    def text_to_idx(self, text: str) -> list:
+        token = self.text_to_token(text)
+        token = [self.char2idx[t] if t in self.c_list else self.char2idx[self.unk] for t in token]
+        return token
+
+    def idx_to_text(self, idxs: list) -> str:
+        token = [self.idx2char[t] for t in idxs]
+        text = self.token_to_text(token)
+        return ''.join(text)
+
+    def __len__(self):
+        return len(self.c_list)
+
+
+class JasoTokenizer:
+    def __init__(self):
+        super(JasoTokenizer, self).__init__()
 
         self.unk = "<unk>"
         self.pad = '<pad>'

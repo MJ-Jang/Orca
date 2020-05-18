@@ -1,1 +1,1 @@
-from .tokenizer import CharacterTokenizer
+from .tokenizer import CharacterTokenizer, JasoTokenizer
