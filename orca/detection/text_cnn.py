@@ -24,6 +24,10 @@ class TextCNNTypoDetector(Module):
     def __init__(self, embedding_dim: int, hidden_dim: int, n_class: int,
                  use_gpu: bool = True, **kwargs):
         self.device = 'cuda:0' if torch.cuda.is_available() and use_gpu else 'cpu'
+        if self.device == 'cuda:0':
+            self.n_gpu = torch.cuda.device_count()
+        else:
+            self.n_gpu = 0
 
         self.tokenizer = CharacterTokenizer()
         vocab_size = len(self.tokenizer)
@@ -36,6 +40,11 @@ class TextCNNTypoDetector(Module):
             'n_class': n_class
         }
         self.model = TextCNN(**self.model_conf).to(self.device)
+        if self.n_gpu == 1:
+            pass
+        elif self.n_gpu > 1:
+            self.model = torch.nn.DataParallel(self.model)
+            self.model = self.model.cuda()
 
     def train(self,
               sents: list,
