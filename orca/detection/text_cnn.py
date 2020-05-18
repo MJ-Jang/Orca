@@ -66,6 +66,7 @@ class TextCNNTypoDetector(Module):
 
         for epoch in range(num_epochs):
             total_loss = 0
+            total_acc = []
             for context, target in tqdm(dataloader, desc='batch progress'):
                 # Remember PyTorch accumulates gradients; zero them out
                 self.model.zero_grad()
@@ -80,10 +81,18 @@ class TextCNNTypoDetector(Module):
                 # update the parameters
                 optimizer.step()
                 total_loss += loss.item()
+
+                _, pred = logits.max(dim=1)
+                acc = [1 if pred[i] == target[i] else 0 for i in range(len(pred))]
+                acc = sum(acc) / len(acc)
+                total_acc.append(acc)
+
             if total_loss <= best_loss:
                 best_loss = total_loss
                 self.save_dict(save_path=save_path, model_prefix=model_prefix)
-            print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
+            print("| Epochs: {} | Training loss: {} | Acc : {} |".format(epoch + 1,
+                                                                         round(total_loss, 4),
+                                                                         round(acc, 4)))
 
     def infer(self, sent: str, **kwargs):
         softmax = torch.nn.Softmax(dim=1)
