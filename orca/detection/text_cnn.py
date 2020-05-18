@@ -17,6 +17,7 @@ import dill
 
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from collections import OrderedDict
 
 
 class TextCNNTypoDetector(Module):
@@ -95,16 +96,24 @@ class TextCNNTypoDetector(Module):
 
         probs, pred = logits.max(dim=1)
         probs = probs.cpu().detach()
-        outp = self.decode_outp(inputs[0], pred[0], probs[0], kwargs['threshold'])
-        outp = self.tokenizer.idx_to_text(outp)
-        return outp
+        print(probs.size())
+        # outp = self.decode_outp(inputs[0], pred[0], probs[0], kwargs['threshold'])
+        # outp = self.tokenizer.idx_to_text(outp)
+        return probs
 
     def load_model(self, model_path: str):
         with open(model_path, 'rb') as modelFile:
             model_dict = dill.load(modelFile)
         model_conf = model_dict['model_conf']
         self.model = TextCNN(**model_conf)
-        self.model.load_state_dict(model_dict["model_params"])
+        try:
+            self.model.load_state_dict(model_dict["model_params"])
+        except:
+            new_dict = OrderedDict()
+            for key in model_dict["model_params"].keys():
+                new_dict[key.replace('module.', '')] = model_dict["model_params"][key]
+            self.model.load_state_dict(new_dict)
+
         self.model.to(self.device)
         self.model.eval()
 
