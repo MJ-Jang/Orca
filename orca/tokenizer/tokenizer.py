@@ -14,6 +14,7 @@ class CharacterTokenizer:
         self.unk = "<unk>"
         self.pad = '<pad>'
         self.pre_tokens = [self.pad, self.unk]
+        self.unk_id, self.pad_id = '', ''
 
         self.char2idx = {}
         self.idx2char = {}
@@ -28,6 +29,8 @@ class CharacterTokenizer:
             self.char2idx = model['char2idx']
             self.idx2char = model['idx2char']
             self.c_list = list(self.char2idx.keys())
+            self.pad_id = self.char2idx[self.pad]
+            self.unk_id = self.char2idx[self.unk]
         else:
             if use_defalt:
                 filename = 'char_tokenizer.model'
@@ -57,6 +60,8 @@ class CharacterTokenizer:
                 self.char2idx[key] = len(self.char2idx)
                 self.idx2char[len(self.char2idx)] = key
         self.c_list = list(self.char2idx.keys())
+        self.pad_id = self.char2idx[self.pad]
+        self.unk_id = self.char2idx[self.unk]
 
         os.makedirs(save_path, exist_ok=True)
 

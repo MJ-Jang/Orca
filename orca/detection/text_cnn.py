@@ -4,7 +4,7 @@
 from __future__ import unicode_literals, print_function, division
 
 from orca.module import TextCNN
-from orca.tokenizer import JasoTokenizer
+from orca.tokenizer import JasoTokenizer, CharacterTokenizer
 from orca.dataset import TypoDetectionDataset
 from orca.abstract import Module
 
@@ -29,7 +29,7 @@ class TextCNNTypoDetector(Module):
         else:
             self.n_gpu = 0
 
-        self.tokenizer = JasoTokenizer()
+        self.tokenizer = CharacterTokenizer()
         vocab_size = len(self.tokenizer)
         self.pad_id = self.tokenizer.pad_id
 
