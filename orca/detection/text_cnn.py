@@ -96,7 +96,7 @@ class TextCNNTypoDetector(Module):
 
         probs, pred = logits.max(dim=1)
         probs = probs.cpu().detach()
-        print(probs.size())
+        print(probs, pred)
         # outp = self.decode_outp(inputs[0], pred[0], probs[0], kwargs['threshold'])
         # outp = self.tokenizer.idx_to_text(outp)
         return probs
