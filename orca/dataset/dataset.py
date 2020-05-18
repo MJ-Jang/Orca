@@ -45,7 +45,6 @@ class TypoDetectionDataset(Dataset):
         if random.random() <= 0.5:
             _, word = noise_maker(word, 1.0, self.typo_nu)
             y = 1
-        print(word, y)
         token = self.tokenizer.text_to_idx(word)
 
         if len(token) <= self.max_len:
