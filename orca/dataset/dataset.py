@@ -27,7 +27,7 @@ class TypoDetectionDataset(Dataset):
         words = set()
 
         for s in tqdm(sents, desc='splitting words'):
-            for w in s.split('\n'):
+            for w in s.split(' '):
                 if self.is_ko_word(w):
                     words.add(w)
 
@@ -45,6 +45,7 @@ class TypoDetectionDataset(Dataset):
         if random.random() <= 0.5:
             _, word = noise_maker(word, 1.0, self.typo_nu)
             y = 1
+        print(word, y)
         token = self.tokenizer.text_to_idx(word)
 
         if len(token) <= self.max_len:

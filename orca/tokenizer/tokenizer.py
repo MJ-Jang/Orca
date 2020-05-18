@@ -58,7 +58,7 @@ class CharacterTokenizer:
         for i, key in enumerate(counter):
             if counter[key] >= min_count:
                 self.char2idx[key] = len(self.char2idx)
-                self.idx2char[len(self.char2idx)] = key
+                self.idx2char[len(self.idx2char)] = key
         self.c_list = list(self.char2idx.keys())
         self.pad_id = self.char2idx[self.pad]
         self.unk_id = self.char2idx[self.unk]
