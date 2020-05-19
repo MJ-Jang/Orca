@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals, print_function, division
 
-from orca.module import TransformerSeqTagger
+from orca.module import TransformerClassifier
 from orca.tokenizer import CharacterTokenizer
 from orca.dataset import TypoDetectionDataset
 from orca.abstract import Module
@@ -19,9 +19,14 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-class TextCNNTypoDetector(Module):
+class TransformerTypoDetector(Module):
 
-    def __init__(self, embedding_dim: int, hidden_dim: int, n_class: int,
+    def __init__(self,
+                 d_model: int,
+                 n_head: int,
+                 n_layers: int,
+                 dim_ff: int,
+                 dropout: float,
                  use_gpu: bool = True, **kwargs):
         self.device = 'cuda:0' if torch.cuda.is_available() and use_gpu else 'cpu'
         if self.device == 'cuda:0':
@@ -35,11 +40,15 @@ class TextCNNTypoDetector(Module):
 
         self.model_conf = {
             'vocab_size': vocab_size,
-            'embedding_dim': embedding_dim,
-            'hidden_dim': hidden_dim,
-            'n_class': n_class
+            'd_model': d_model,
+            'n_head': n_head,
+            'n_layers': n_layers,
+            'dim_ff': dim_ff,
+            'dropout': dropout,
+            'pad_id': self.pad_id,
+            'n_class': 2
         }
-        self.model = TextCNN(**self.model_conf).to(self.device)
+        self.model = TransformerClassifier(**self.model_conf).to(self.device)
         if self.n_gpu == 1:
             pass
         elif self.n_gpu > 1:
@@ -65,6 +74,7 @@ class TextCNNTypoDetector(Module):
 
         for epoch in range(num_epochs):
             total_loss = 0
+            total_acc = []
             for context, target in tqdm(dataloader, desc='batch progress'):
                 # Remember PyTorch accumulates gradients; zero them out
                 self.model.zero_grad()
@@ -73,16 +83,25 @@ class TextCNNTypoDetector(Module):
                 target = target.to(self.device)
 
                 logits = self.model(context)
-                loss = F.cross_entropy(logits, target, ignore_index=self.pad_id)
+                loss = F.cross_entropy(logits, target)
                 # backpropagation
                 loss.backward()
                 # update the parameters
                 optimizer.step()
                 total_loss += loss.item()
+
+                _, pred = logits.max(dim=1)
+                # print(pred, target)
+                acc = [1 if pred[i] == target[i] else 0 for i in range(len(pred))]
+                acc = sum(acc) / len(acc)
+                total_acc.append(acc)
+
             if total_loss <= best_loss:
                 best_loss = total_loss
                 self.save_dict(save_path=save_path, model_prefix=model_prefix)
-            print("| Epochs: {} | Training loss: {} |".format(epoch + 1, round(total_loss, 4)))
+            print("| Epochs: {} | Training loss: {} | Acc : {} |".format(epoch + 1,
+                                                                         round(total_loss, 4),
+                                                                         round(acc, 4)))
 
     def infer(self, sent: str, **kwargs):
         softmax = torch.nn.Softmax(dim=1)

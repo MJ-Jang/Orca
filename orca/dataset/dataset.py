@@ -42,7 +42,7 @@ class TypoDetectionDataset(Dataset):
     def __getitem__(self, item):
         word = self.words[item]
         y = 0
-        if random.random() <= 0.2:
+        if random.random() <= 0.4:
             _, word = noise_maker(word, 1.0, self.typo_nu)
             y = 1
         token = self.tokenizer.text_to_idx(word)

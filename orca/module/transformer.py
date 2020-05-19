@@ -44,6 +44,59 @@ class Classifier(nn.Module):
         return x
 
 
+class TransformerClassifier(nn.Module):
+
+    def __init__(self,
+                 vocab_size: int,
+                 d_model: int,
+                 n_head: int,
+                 n_layers: int,
+                 dim_ff: int,
+                 dropout: float,
+                 pad_id: int,
+                 n_class: int):
+        super(TransformerClassifier, self).__init__()
+
+        self.vocab_size = vocab_size
+
+        self.d_model = d_model
+        self.n_head = n_head
+        self.n_layers = n_layers
+        self.dim_ff = dim_ff
+        self.dropout = dropout
+        self.pad_id = pad_id
+
+        self.embedding = nn.Embedding(vocab_size, d_model)
+
+        self.position_embedding = PositionalEncoding(d_model, dropout)
+        enc_layer = TransformerEncoderLayer(d_model, n_head, dim_ff)
+
+        self.encoder = TransformerEncoder(enc_layer, n_layers)
+        self.classifier = Classifier(d_model=d_model, class_num=n_class, d_ff=dim_ff, dropout=dropout)
+
+    def _generate_square_subsequent_mask(self, sz):
+        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        return mask
+
+    def forward(self, src_id):
+        '''
+        src_id: input token index sequence: N * S
+        '''
+        if len(src_id.size()) == 1:
+            src_id = src_id.reshape(1, -1)
+
+        x = self.embedding(src_id) * math.sqrt(self.d_model)  # (N * S * E)
+        x += self.position_embedding(x)
+        x = x.transpose(1, 0)  # (S * N * E)
+        seq_mask = self._generate_square_subsequent_mask(len(x)).to(x.device)
+
+        # S * S
+        x = self.encoder(x, seq_mask).transpose(1, 0)  # (N * S * E)
+        logits = self.classifier(x).mean(dim=1) # (N * C)
+        return logits
+
+
 class TransformerSeqTagger(nn.Module):
 
     def __init__(self,

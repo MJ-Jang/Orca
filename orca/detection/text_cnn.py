@@ -75,7 +75,7 @@ class TextCNNTypoDetector(Module):
                 target = target.to(self.device)
 
                 logits = self.model(context)
-                loss = F.cross_entropy(logits, target, ignore_index=self.pad_id)
+                loss = F.cross_entropy(logits, target)
                 # backpropagation
                 loss.backward()
                 # update the parameters

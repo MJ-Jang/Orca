@@ -1,1 +1,2 @@
 from .text_cnn import TextCNNTypoDetector
+from .transformer import TransformerTypoDetector
