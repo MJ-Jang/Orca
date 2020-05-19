@@ -27,7 +27,8 @@ def noise_maker(text: str, threshold: float = 0.3, noise_char_num: int = 2):
     if rand >= threshold:
         return text_tokenized, text
     else:
-        rand_idx = random.sample(range(len(text_tokenized)), min(len(text_tokenized), noise_char_num))
+        sample_num_noise = random.choice(range(1, noise_char_num+1))
+        rand_idx = random.sample(range(len(text_tokenized)), min(len(text_tokenized), sample_num_noise))
         for idx in rand_idx:
             if text_tokenized[idx] in list(noise_dict.keys()):
                 text_tokenized[idx] = random.choice(noise_dict[text_tokenized[idx]])
