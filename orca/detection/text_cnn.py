@@ -95,20 +95,19 @@ class TextCNNTypoDetector(Module):
                                                                          round(acc, 4)))
 
     def infer(self, sent: str, **kwargs):
+        words = sent.split(' ')
+        tokens = [self.tokenizer.text_to_idx(t) for t in words]
+        max_token_len = max([len(s) for s in tokens])
+        tokens = [t + [self.pad_id] * (max_token_len - len(t)) if len(t) < max_token_len else t for t in tokens]
+        tokens = torch.LongTensor(tokens)
+
         softmax = torch.nn.Softmax(dim=1)
-
-        inputs = self.tokenizer.text_to_idx(sent)
-        inputs = torch.LongTensor([inputs]).to(self.device)
-
-        logits = self.model(inputs)
+        logits = self.model(tokens)
         logits = softmax(logits)
 
         probs, pred = logits.max(dim=1)
         probs = probs.cpu().detach()
-        print(probs, pred)
-        # outp = self.decode_outp(inputs[0], pred[0], probs[0], kwargs['threshold'])
-        # outp = self.tokenizer.idx_to_text(outp)
-        return probs
+        return pred.tolist(), probs.tolist()
 
     def load_model(self, model_path: str):
         with open(model_path, 'rb') as modelFile:

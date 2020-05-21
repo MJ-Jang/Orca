@@ -106,7 +106,8 @@ class TransformerSeqTagger(nn.Module):
                  n_layers: int,
                  dim_ff: int,
                  dropout: float,
-                 pad_id: int):
+                 pad_id: int,
+                 n_class: int):
         super(TransformerSeqTagger, self).__init__()
 
         self.vocab_size = vocab_size
@@ -124,26 +125,83 @@ class TransformerSeqTagger(nn.Module):
         enc_layer = TransformerEncoderLayer(d_model, n_head, dim_ff)
 
         self.encoder = TransformerEncoder(enc_layer, n_layers)
-        self.classifier = Classifier(d_model=d_model, class_num=vocab_size, d_ff=dim_ff, dropout=dropout)
+        self.classifier = Classifier(d_model=d_model, class_num=n_class, d_ff=dim_ff, dropout=dropout)
 
     def _generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
-    def forward(self, src_id):
+    def forward(self, src, is_input_token: bool = True):
         '''
         src_id: input token index sequence: N * S
         '''
-        if len(src_id.size()) == 1:
-            src_id = src_id.reshape(1, -1)
+        if is_input_token:
+            if len(src.size()) == 1:
+                src_id = src.reshape(1, -1)
 
-        x = self.embedding(src_id) * math.sqrt(self.d_model)  # (N * S * E)
-        x += self.position_embedding(x)
-        x = x.transpose(1, 0)  # (S * N * E)
+            x = self.embedding(src) * math.sqrt(self.d_model)  # (N * S * E)
+            x += self.position_embedding(x)
+            x = x.transpose(1, 0)  # (S * N * E)
+        else:
+            x = src
+            print(x.size())
         seq_mask = self._generate_square_subsequent_mask(len(x)).to(x.device)
 
         # S * S
         x = self.encoder(x, seq_mask).transpose(1, 0)  # (N * S * E)
         logits = self.classifier(x)
+        return logits
+
+
+class TransformerHierachiSeqTagger(nn.Module):
+
+    def __init__(self,
+                 vocab_size: int,
+                 word_dim: int,
+                 d_model: int,
+                 n_head: int,
+                 n_layers: int,
+                 dim_ff: int,
+                 dropout: float,
+                 pad_id: int,
+                 n_class: int):
+        super(TransformerHierachiSeqTagger, self).__init__()
+
+        self.vocab_size = vocab_size
+        self.word_dim = word_dim
+        self.d_model = d_model
+        self.n_head = n_head
+        self.n_layers = n_layers
+        self.dim_ff = dim_ff
+        self.dropout = dropout
+        self.pad_id = pad_id
+
+        self.embedding = nn.Embedding(vocab_size, word_dim, padding_idx=pad_id)
+        self.word_linear = nn.Linear(word_dim, d_model, bias=False)
+
+        self.position_embedding = PositionalEncoding(d_model, dropout)
+        enc_layer = TransformerEncoderLayer(d_model, n_head, dim_ff)
+
+        self.encoder = TransformerEncoder(enc_layer, n_layers)
+        self.classifier = Classifier(d_model=d_model, class_num=n_class, d_ff=dim_ff, dropout=dropout)
+
+    def _generate_square_subsequent_mask(self, sz):
+        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        return mask
+
+    def forward(self, src):
+        '''
+        src_id: input token index sequence: N * S * W
+        '''
+        x = self.embedding(src) # N * S * W * E
+        x = self.word_linear(x.mean(dim=2)) # N * S * E
+        x *= math.sqrt(self.d_model) # N * S * E
+        x += self.position_embedding(x) # N * S * E
+        x = x.transpose(1, 0) # S * N * E
+
+        seq_mask = self._generate_square_subsequent_mask(len(x)).to(x.device) # S * S
+        x = self.encoder(x, seq_mask).transpose(1, 0)  # (N * S * E)
+        logits = self.classifier(x) # N * S * C
         return logits

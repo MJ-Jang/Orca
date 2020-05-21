@@ -1,1 +1,1 @@
-from .dataset import TypoDetectionDataset
+from .dataset import TypoDetectionDataset, TypoDetectionSentenceLevelDataset
