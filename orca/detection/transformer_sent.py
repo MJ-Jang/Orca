@@ -60,18 +60,27 @@ class TransformerSentTypoDetector(Module):
 
     @staticmethod
     def calculate_acc(pred, target):
-        acc = []
+        tp, tn, fp, fn = 0, 0, 0, 0
         for pre, tgt in zip(pred, target):
             for p, t in zip(pre, tgt):
-                if t.item() == 2:
+                p, t = p.item(), t.item()
+                if t == 2:
                     continue
                 else:
-                    if p.item() == t.item():
-                        acc.append(1)
-                    else:
-                        acc.append(0)
-        acc = sum(acc) / len(acc)
-        return round(acc, 4)
+                    if p == 1 and t == 1:
+                        tp += 1
+                    elif p == 1 and t == 0:
+                        fp += 1
+                    elif p == 0 and t == 1:
+                        fn += 1
+                    elif p == 0 and t == 0:
+                        tn += 1
+
+        acc = round((tp + tn) / (tp + tn + fp + fn), 4)
+        precision = round(tp/(tp + fp), 4)
+        recall = round(tp/(tp + fn), 4)
+        f1 = round(recall * precision / (recall + precision), 4)
+        return acc, precision, recall, f1
 
     def train(self,
               sents: list,
@@ -98,7 +107,7 @@ class TransformerSentTypoDetector(Module):
         for epoch in range(num_epochs):
 
             total_loss = 0
-            total_acc = []
+            total_acc, total_precision, total_recall, total_f1 = [], [], [], []
             for context, target in tqdm(dataloader, desc='batch progress'):
                 # Remember PyTorch accumulates gradients; zero them out
                 self.model.zero_grad()
@@ -119,14 +128,27 @@ class TransformerSentTypoDetector(Module):
 
                 # Acc
                 _, pred = logits.max(dim=-1)
-                total_acc.append(self.calculate_acc(pred, target))
+                acc, precision, recall, f1 = self.calculate_acc(pred, target)
+
+                total_acc.append(acc)
+                total_precision.append(precision)
+                total_recall.append(recall)
+                total_f1.append(f1)
+
             acc = sum(total_acc) / len(total_acc)
+            precision = sum(total_precision) / len(total_precision)
+            recall = sum(total_recall) / len(total_recall)
+            f1 = sum(total_f1) / len(total_f1)
+
             if total_loss <= best_loss:
                 best_loss = total_loss
                 self.save_dict(save_path=save_path, model_prefix=model_prefix)
-            print("| Epochs: {} | Training loss: {} | Acc : {} |".format(epoch + 1,
-                                                                         round(total_loss, 4),
-                                                                         round(acc, 4)))
+            print("| Epochs: {} | Training loss: {} |".format(epoch + 1,
+                                                              round(total_loss, 4)))
+            print("| Acc : {} | Precision: {} | Recall : {} | F1: {} |".format(round(acc, 4),
+                                                                               round(precision, 4),
+                                                                               round(recall, 4),
+                                                                               round(f1, 4)))
 
     def infer(self, sent: str, **kwargs):
         softmax = torch.nn.Softmax(dim=1)
