@@ -30,7 +30,8 @@ class EditDistTypoCorrecter(Module):
         self.chartok = JasoTokenizer()
 
         self.word_dict = Counter(word_dict)
-        self.word_dict_by_length = dict()
+        self.word_list = []
+        self.word_set = set()
 
     def train(self,
               sents: list,
@@ -40,27 +41,29 @@ class EditDistTypoCorrecter(Module):
         for text in tqdm(sents):
             # add whiespacing
             words = self._whitespacing(text)
-            self.word_dict.update(words)
             for w in words:
+                self.word_set.add(w)
                 if len(w) > 1:
-                    if not self.word_dict_by_length.get(len(w)):
-                        self.word_dict_by_length[len(w)] = set()
-                    self.word_dict_by_length[len(w)].add(w)
+                    if not self.word_dict.get(len(w)):
+                        self.word_dict[len(w)] = set()
+                    self.word_dict[len(w)].add(w)
 
             # add kor tokenization
-            words = self._tokenize(text)
-            self.word_dict.update(words)
-            for w in words:
-                if len(w) > 1:
-                    if not self.word_dict_by_length.get(len(w)):
-                        self.word_dict_by_length[len(w)] = set()
-                    self.word_dict_by_length[len(w)].add(w)
+            # words = self._tokenize(text)
+            # self.word_dict.update(words)
+            # for w in words:
+            #     if len(w) > 1:
+            #         if not self.word_dict_by_length.get(len(w)):
+            #             self.word_dict_by_length[len(w)] = set()
+            #         self.word_dict_by_length[len(w)].add(w)
 
     def load_model(self, model_path: str):
         with open(model_path, "rb") as file:
             model = dill.load(file)
+        print(model.keys())
         self.word_dict = model['word_dict']
-        self.word_dict_by_length = model['word_dict_by_length']
+        self.word_list = model['word_list']
+        self.word_set = model['word_set']
 
     def save_dict(self, save_path: str, model_prefix: str):
         os.makedirs(save_path, exist_ok=True)
@@ -68,7 +71,6 @@ class EditDistTypoCorrecter(Module):
 
         outp_dict = {
             'word_dict': self.word_dict,
-            'word_dict_by_length': self.word_dict_by_length
         }
 
         with open(filename, "wb") as file:
@@ -101,14 +103,13 @@ class EditDistTypoCorrecter(Module):
         if len(word) <= 1:
             return word
 
-        freq = self.word_dict.get(word)
-        if freq:
+        if word in self.word_set:
             return word
 
         length = len(word)
         candidates = set()
         for i in range(length-1, length+2):
-            w_set = self.word_dict_by_length.get(i)
+            w_set = self.word_dict.get(str(i))
             if w_set:
                 candidates.update(w_set)
         candidates = extract_close_words(word, candidates)
@@ -122,7 +123,7 @@ class EditDistTypoCorrecter(Module):
         return word
 
     def _is_word_in_dict(self, word):
-        return self.word_dict.get(word)
+        return word in self.word_set
 
     def __len__(self):
-        return len(self.word_dict)
+        return len(self.word_set)
