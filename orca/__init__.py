@@ -1,1 +1,1 @@
-from .typo_corrector.non_words import EditDistTypoCorrecter
+from .correction.non_words import EditDistTypoCorrecter
