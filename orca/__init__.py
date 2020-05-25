@@ -1,1 +1,2 @@
 from .correction.non_words import EditDistTypoCorrecter
+from .typo_corrector import OrcaTypoProcessor
