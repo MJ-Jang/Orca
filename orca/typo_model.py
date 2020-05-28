@@ -13,7 +13,8 @@ import os
 
 class OrcaTypoProcessor:
     def __init__(self,
-                 word_dict_path: Text,
+                 unigram_dict_path: Text,
+                 bigram_dict_path: Text,
                  detection_model_path: Text = None,
                  word_max_len: int = 10) -> None:
         self.detector = TransformerTypoDetector(word_dim=128,
@@ -23,7 +24,7 @@ class OrcaTypoProcessor:
                                                 dim_ff=128,
                                                 dropout=0.5)
         self.corrector = SymDeletingTypoCorrecter()
-        self.corrector.load_model(word_dict_path)
+        self.corrector.load_model(unigram_dict_path=unigram_dict_path, bigram_dict_path=bigram_dict_path)
 
         if detection_model_path:
             self.detector.load_model(detection_model_path)
@@ -43,7 +44,8 @@ class OrcaTypoProcessor:
 
         outp = []
         for i, (pr, pred, token) in enumerate(zip(probs, preds, sent_splitted)):
-            if len(token) <= 1:
+            if len(token) == 1:
+                outp.append(sent_splitted[i])
                 continue
             if pred == 1:
                 outp.append(self.corrector.infer(sent_splitted[i]))
