@@ -5,7 +5,7 @@ with open("requirements.txt") as f:
 
 setup(
     name='orca',
-    version='0.1.2',
+    version='0.1.3',
     description='Korean typo correcter',
     author='MJ Jang',
     install_requires=[],
