@@ -43,6 +43,8 @@ class OrcaTypoProcessor:
 
         outp = []
         for i, (pr, pred, token) in enumerate(zip(probs, preds, sent_splitted)):
+            if len(token) <= 1:
+                continue
             if pred == 1:
                 outp.append(self.corrector.infer(sent_splitted[i]))
             elif pred == 0 and non_typo_threshold:
@@ -54,15 +56,20 @@ class OrcaTypoProcessor:
                 outp.append(sent_splitted[i])
         return ' '.join(outp)
 
-    def _infer_detection(self, sent: Text):
+    def _infer_detection(self, sent: Text, non_typo_threshold: float = None):
         sent_splitted = sent.split(' ')
         probs, preds = self.detector.infer(sent=sent, max_word_len=self.word_max_len)
         probs, preds = probs[0], preds[0]
 
         outp = []
         for i, (pr, pred, token) in enumerate(zip(probs, preds, sent_splitted)):
+            if len(token) <= 1:
+                continue
             if pred == 1:
                 outp.append({'word': sent_splitted[i], 'position': i})
+            elif pred == 0 and non_typo_threshold:
+                if pr <= non_typo_threshold:
+                    outp.append({'word': sent_splitted[i], 'position': i})
         return outp
 
     def _infer_correction(self, word: Text):
