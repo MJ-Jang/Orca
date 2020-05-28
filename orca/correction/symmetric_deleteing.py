@@ -7,6 +7,9 @@ from symspellpy.symspellpy import SymSpell, Verbosity
 from orca.abstract import Module
 from typing import Text
 from orca.utils.hangeul import flat_hangeul, merge_flatted_hangeul
+from collections import Counter
+from itertools import islice
+from tqdm import tqdm
 
 import os
 
@@ -20,25 +23,54 @@ class SymDeletingTypoCorrecter(Module):
     def train(self,
               corpus_path: str,
               save_path: str,
-              save_dict_prefix: str,
+              unigram_dict_prefix: str,
+              bigram_dict_prefix: str,
               **kwargs
               ):
         self.symspell.create_dictionary(corpus_path)
+        # 1) Unigram dict
         worddict = ''
         for key, count in self.symspell.words.items():
             worddict += '{} {}\n'.format(''.join(flat_hangeul(key)), count)
 
-        save_path = os.path.join(save_path, save_dict_prefix + '.txt')
-        with open(save_path, 'w', encoding='utf-8') as file:
+        unigram_save_path = os.path.join(save_path, unigram_dict_prefix + '.txt')
+        with open(unigram_save_path, 'w', encoding='utf-8') as file:
             for line in worddict:
                 file.write(line)
-        print("Total {} words are saved!".format(len(self.symspell.words.items())))
+        print("Total {} Unigrams are saved!".format(len(self.symspell.words.items())))
 
-    def load_model(self, word_dict_path: str):
+        # 2) Bigram dict
+        with open(corpus_path, 'r', encoding='utf-8') as file:
+            corpus = file.readlines()
+        corpus = [s.strip() for s in corpus]
+
+        bi_count = Counter()
+        for text in tqdm(corpus, desc='Bigram processing'):
+            text = [''.join(flat_hangeul(t)) for t in text.split(" ")]
+            bi_count += Counter(zip(text, islice(text, 1, None)))
+
+        bi_dict = ''
+        for key, count in bi_count.items():
+            bi_dict += '{} {} {}\n'.format(''.join(flat_hangeul(key[0])),
+                                           ''.join(flat_hangeul(key[1])),
+                                           count)
+
+        bigram_save_path = os.path.join(save_path, bigram_dict_prefix + '.txt')
+        with open(bigram_save_path, 'w', encoding='utf-8') as file:
+            for line in bi_dict:
+                file.write(line)
+        print("Total {} bigrams are saved!".format(len(bi_dict)))
+
+    def load_model(self, unigram_dict_path: str, bigram_dict_path, **kwargs):
         try:
-            self.symspell.load_dictionary(word_dict_path, term_index=0, count_index=1)
+            self.symspell.load_dictionary(unigram_dict_path, term_index=0, count_index=1)
         except ValueError:
-            raise ValueError("Specified dictionary path not exist")
+            raise ValueError("Specified unigram dictionary path not exist")
+
+        try:
+            self.symspell.load_bigram_dictionary(unigram_dict_path, term_index=0, count_index=1)
+        except ValueError:
+            raise ValueError("Specified bigram dictionary path not exist")
 
     def infer(self, word: Text, **kwargs):
         suggestion_verbosity = Verbosity.CLOSEST  # TOP, CLOSEST, ALL
@@ -47,7 +79,3 @@ class SymDeletingTypoCorrecter(Module):
             word = list(suggestions[0].term)
             return merge_flatted_hangeul(word)
         return word
-
-aa = SymDeletingTypoCorrecter()
-aa.load_model('./data/testdict.txt')
-aa.infer('ㅠㅡ랑스로')

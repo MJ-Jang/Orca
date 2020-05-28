@@ -1,2 +1,2 @@
-from .correction.non_words import EditDistTypoCorrecter
+from .correction import SymDeletingTypoCorrecter
 from .typo_model import OrcaTypoProcessor
