@@ -14,7 +14,7 @@ import os
 class OrcaTypoProcessor:
     def __init__(self,
                  unigram_dict_path: Text,
-                 bigram_dict_path: Text,
+                 bigram_dict_path: Text = None,
                  detection_model_path: Text = None,
                  word_max_len: int = 10) -> None:
         self.detector = TransformerTypoDetector(word_dim=128,
