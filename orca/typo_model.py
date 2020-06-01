@@ -51,10 +51,10 @@ class OrcaTypoProcessor:
                 outp.append(sent_splitted[i])
                 continue
             if pred == 1 or pred == 2:
+                # 띄어쓰기로 인해 분리된 case
                 if i < len(preds)-1:
                     repl = self.corrector.infer(sent_splitted[i])
                     repl_nextToken = repl + sent_splitted[i+1]
-                    print(repl_nextToken)
                     repl_bi = self.corrector.infer(repl_nextToken)
                     if repl_bi != repl_nextToken:
                         repl = repl_bi.replace(sent_splitted[i+1], '').strip()
