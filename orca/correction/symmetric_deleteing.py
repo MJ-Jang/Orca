@@ -37,6 +37,7 @@ class SymDeletingTypoCorrecter(Module):
         with open(unigram_save_path, 'w', encoding='utf-8') as file:
             for line in worddict:
                 file.write(line)
+            file.close()
         print("Total {} Unigrams are saved!".format(len(self.symspell.words.items())))
 
         if bigram_dict_prefix:
@@ -45,22 +46,21 @@ class SymDeletingTypoCorrecter(Module):
                 corpus = file.readlines()
             corpus = [s.strip() for s in corpus]
 
-            bi_count = Counter()
-            for text in tqdm(corpus, desc='Bigram processing'):
-                text = [''.join(flat_hangeul(t)) for t in text.split(" ")]
-                bi_count += Counter(zip(text, islice(text, 1, None)))
+            bi_count = self.count_bigrams(corpus, min_count=5)
 
             bi_dict = ''
             for key, count in bi_count.items():
-                bi_dict += '{} {} {}\n'.format(''.join(flat_hangeul(key[0])),
-                                               ''.join(flat_hangeul(key[1])),
+                s1, s2 = key.split(' ')
+                bi_dict += '{} {} {}\n'.format(''.join(flat_hangeul(s1)),
+                                               ''.join(flat_hangeul(s2)),
                                                count)
 
             bigram_save_path = os.path.join(save_path, bigram_dict_prefix + '.txt')
-            with open(bigram_save_path, 'w', encoding='utf-8') as file:
+            with open(bigram_save_path, 'w', encoding='utf-8') as biFile:
                 for line in bi_dict:
-                    file.write(line)
-            print("Total {} bigrams are saved!".format(len(bi_dict)))
+                    biFile.write(line)
+                biFile.close()
+            print("Total {} bigrams are saved!".format(len(bi_count)))
 
     def load_model(self, unigram_dict_path: str, bigram_dict_path: str = None, **kwargs):
         try:
@@ -81,3 +81,22 @@ class SymDeletingTypoCorrecter(Module):
             word = list(suggestions[0].term)
             return merge_flatted_hangeul(word)
         return word
+
+    @staticmethod
+    def count_bigrams(corpus: list, min_count: int):
+        bigrams = []
+        for t in tqdm(corpus):
+            if t.__class__ != str:
+                continue
+            else:
+                text = t.split(' ')
+                _bigrams = zip(*[text[i:] for i in range(2)])
+                bigrams += [' '.join(s) for s in list(_bigrams)]
+
+        count = Counter(bigrams)
+        new_dict = {}
+        for key, value in count.items():
+            if value >= min_count:
+                new_dict[key] = value
+        return new_dict
+

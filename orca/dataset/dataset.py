@@ -44,7 +44,7 @@ class TypoDetectionSentenceLevelDataset(Dataset):
 
         for word in words:
             y = 0
-            if random.random() <= 0.3:
+            if random.random() <= 0.5:
                 _, word = noise_maker(word, 1.0, self.typo_nu)
                 y = 1
             token = self.tokenizer.text_to_idx(word)
