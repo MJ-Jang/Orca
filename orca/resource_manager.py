@@ -6,15 +6,12 @@ from __future__ import unicode_literals, print_function, division
 from typing import Text
 from orca.utils.hangeul import flat_hangeul, merge_flatted_hangeul
 
-import os
 
+class UnigramDictManager:
+    def __init__(self, file_path: str):
+        self.path = file_path
 
-class DefaultDictManager:
-    def __init__(self):
-        here = os.path.dirname(__file__)
-        self.path = os.path.join(here, "resources", 'default_uni_dict.txt')
-
-        with open(self.path, 'r', encoding='utf-8') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             data = file.readlines()
         data = [s.strip() for s in data]
         self.uni_dict = {}
@@ -24,9 +21,11 @@ class DefaultDictManager:
             cnt = int(cnt)
             self.uni_dict[key] = cnt
 
-    def create(self, word: Text):
+    def create(self, word: Text, count: int = 1000):
         word = ''.join(flat_hangeul(word))
-        self.uni_dict[word] = 1000
+        value = self.uni_dict.get(word)
+        if not value:
+            self.uni_dict[word] = count
 
     def read(self):
         word_list = list(self.uni_dict.keys())
@@ -53,18 +52,24 @@ class DefaultDictManager:
         else:
             raise ValueError("Specified word not exist in default unigram dictionary")
 
+    def search(self, word: Text):
+        word = ''.join(flat_hangeul(word))
+        value = self.uni_dict.get(word)
+        if value:
+            return True
+        else:
+            return False
+
     def save_dict(self, local_path: str = None):
         worddict = ''
         for key, count in self.uni_dict.items():
             worddict += '{} {}\n'.format(''.join(flat_hangeul(key)), count)
 
-        with open(self.path, 'w', encoding='utf-8') as file:
+        if local_path:
+            save_path = local_path
+        else:
+            save_path = self.path
+        with open(save_path, 'w', encoding='utf-8') as file:
             for line in worddict:
                 file.write(line)
             file.close()
-
-        if local_path:
-            with open(local_path, 'w', encoding='utf-8') as file:
-                for line in worddict:
-                    file.write(line)
-                file.close()
