@@ -44,10 +44,14 @@ class TypoDetectionSentenceLevelDataset(Dataset):
 
         for word in words:
             y = 0
-            prob_ = random.random()
-            if prob_ <= 0.5:
-                if prob_ <= 0.3:
+            prob_ = random.uniform(0, 1)
+            if prob_ <= 0.4:
+                if prob_ <= 0.1:
                     _, word = noise_maker(word, 1.0, 1, method='ct')
+                elif prob_ <= 0.2:
+                    _, word = noise_maker(word, 1.0, 1, method='d')
+                elif prob_ <= 0.3:
+                    _, word = noise_maker(word, 1.0, 1, method='s')
                 else:
                     _, word = noise_maker(word, 1.0, self.typo_nu, method='g')
                 y = 1
