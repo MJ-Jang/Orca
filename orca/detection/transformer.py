@@ -100,7 +100,7 @@ class TransformerTypoDetector(Module):
                                                     max_word_len=kwargs['max_word_len'],
                                                     ignore_idx=kwargs['ignore_index'])
 
-        dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=4)
+        dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=kwargs['num_workers'])
 
         best_loss = 1e5
 
