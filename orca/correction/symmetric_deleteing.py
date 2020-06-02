@@ -64,6 +64,10 @@ class SymDeletingTypoCorrecter(Module):
 
     def load_model(self, unigram_dict_path: str, bigram_dict_path: str = None, **kwargs):
         try:
+            here = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+            default_path = os.path.join(here, "resources", 'default_uni_dict.txt')
+
+            self.symspell.load_dictionary(default_path, term_index=0, count_index=1)
             self.symspell.load_dictionary(unigram_dict_path, term_index=0, count_index=1)
         except ValueError:
             raise ValueError("Specified unigram dictionary path not exist")
@@ -99,4 +103,3 @@ class SymDeletingTypoCorrecter(Module):
             if value >= min_count:
                 new_dict[key] = value
         return new_dict
-

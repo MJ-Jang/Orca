@@ -7,6 +7,7 @@ from typing import Text
 
 from orca.detection.transformer import TransformerTypoDetector
 from orca.correction import SymDeletingTypoCorrecter
+from orca.utils.hangeul import normalize_unicode
 
 import os
 
@@ -37,7 +38,10 @@ class OrcaTypoProcessor:
             self.detector.load_model(full_filename)
             self.word_max_len = 10
 
-    def process(self, sent: Text, non_typo_threshold: float = None):
+    def process(self, sent: Text, non_typo_threshold: float = None, do_normalize: bool = True):
+        if do_normalize:
+            sent = normalize_unicode(sent)
+
         sent_splitted = sent.split(' ')
         probs, preds = self.detector.infer(sent=sent, max_word_len=self.word_max_len)
         probs, preds = probs[0], preds[0]

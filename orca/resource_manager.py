@@ -26,7 +26,7 @@ class DefaultDictManager:
 
     def create(self, word: Text):
         word = ''.join(flat_hangeul(word))
-        self.uni_dict[word] = 10000
+        self.uni_dict[word] = 1000
 
     def read(self):
         word_list = list(self.uni_dict.keys())
@@ -53,13 +53,18 @@ class DefaultDictManager:
         else:
             raise ValueError("Specified word not exist in default unigram dictionary")
 
-    def save_dict(self):
+    def save_dict(self, local_path: str = None):
         worddict = ''
         for key, count in self.uni_dict.items():
             worddict += '{} {}\n'.format(''.join(flat_hangeul(key)), count)
 
-        unigram_save_path = os.path.join(self.path)
-        with open(unigram_save_path, 'w', encoding='utf-8') as file:
+        with open(self.path, 'w', encoding='utf-8') as file:
             for line in worddict:
                 file.write(line)
             file.close()
+
+        if local_path:
+            with open(local_path, 'w', encoding='utf-8') as file:
+                for line in worddict:
+                    file.write(line)
+                file.close()
