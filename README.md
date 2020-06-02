@@ -7,6 +7,7 @@
 
 ---
 **ORyu Correcting Assistance**
+- built for Korean spell checking
 
 ### 1. Structure
 TBD...
