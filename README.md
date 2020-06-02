@@ -60,3 +60,40 @@ spellchecker = OrcaTypoProcessor(unigram_dict_path='data/unigram_dict.txt', dete
 text = 'ㅠㅡ랑스로 여행갈래애'
 spellchecker.process(text)
 ```
+
+### 5. Manage unigram dictionary manually
+##### a. load resource manager
+```python
+from orca.resource_manager import UnigramDictManager
+manager = UnigramDictManager('data/unigram_dict.txt')
+```
+
+##### b-1. create new unigram
+```python
+manager.create(word='대한민국', count=1000)
+```
+##### b-2. read unigram
+```python
+manager.read(word='대한민국')
+```
+##### b-3. delete unigram
+```python
+manager.delete(word='대한민국')
+```
+##### b-4. update unigram
+```python
+manager.update(word='대한민국', repl_word='한국')
+```
+##### b-5. search is unigram exist in dict
+```python
+manager.search(word='대한민국')
+```
+##### c. save unigram dict
+```python
+manager.save_dict(local_path='test.dict')
+```
+
+
+
+
+
