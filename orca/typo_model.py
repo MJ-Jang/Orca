@@ -66,11 +66,10 @@ class OrcaTypoProcessor:
                     # 띄어쓰기로 인해 분리된 case
                     if i < len(preds)-1:
                         repl = self.corrector.infer(sent_splitted[i])
-                        repl_nextToken = repl + \
-                                         re.findall(pattern='[a-zA-Zㄱ-ㅎㅏ-ㅣ가-힣\d]+', string=sent_splitted[i+1])[0]
+                        repl_nextToken = repl + sent_splitted[i+1]
                         repl_bi = self.corrector.infer(repl_nextToken)
                         if repl_bi != repl_nextToken:
-                            repl = repl_bi.replace(sent_splitted[i+1], '').strip()
+                            repl = repl_bi[:len(repl)]
                         outp.append(repl)
                     else:
                         repl = self.corrector.infer(sent_splitted[i])
