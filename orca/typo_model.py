@@ -13,6 +13,7 @@ import os
 import re
 
 defense_pattern = re.compile(pattern='[0-9\./\-]{3,}')
+end_marks = ['?', '!', '.']
 
 
 class OrcaTypoProcessor:
@@ -72,7 +73,10 @@ class OrcaTypoProcessor:
                             repl = repl_bi.replace(sent_splitted[i+1], '').strip()
                         outp.append(repl)
                     else:
-                        outp.append(self.corrector.infer(sent_splitted[i]))
+                        repl = self.corrector.infer(sent_splitted[i])
+                        if (sent_splitted[i][-1] in end_marks) and (repl[-1] not in end_marks):
+                            repl += sent_splitted[i][-1]
+                        outp.append(repl)
             else:
                 outp.append(sent_splitted[i])
         return ' '.join(outp)
