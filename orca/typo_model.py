@@ -21,7 +21,8 @@ class OrcaTypoProcessor:
                  unigram_dict_path: Text,
                  bigram_dict_path: Text = None,
                  detection_model_path: Text = None,
-                 word_max_len: int = 10) -> None:
+                 word_max_len: int = 10,
+                 protect_word_list: list = None) -> None:
         self.detector = TransformerTypoDetector(word_dim=128,
                                                 d_model=128,
                                                 n_head=4,
@@ -30,6 +31,11 @@ class OrcaTypoProcessor:
                                                 dropout=0.5)
         self.corrector = SymDeletingTypoCorrecter()
         self.corrector.load_model(unigram_dict_path=unigram_dict_path, bigram_dict_path=bigram_dict_path)
+
+        if not protect_word_list:
+            self.protection = set([])
+        else:
+            self.protection = set(protect_word_list)
 
         if detection_model_path:
             self.detector.load_model(detection_model_path)
@@ -55,9 +61,16 @@ class OrcaTypoProcessor:
 
         outp = []
         for i, (pr, pred, token) in enumerate(zip(probs, preds, sent_splitted)):
+            # if word length is 1
             if len(token) == 1:
                 outp.append(sent_splitted[i])
                 continue
+            # if word is in protection list
+            if token in self.protection:
+                outp.append(sent_splitted[i])
+                continue
+
+            # if predicted as typo
             if pred == 1 or pred == 2:
                 # defense logic
                 if defense_pattern.findall(sent_splitted[i]):
