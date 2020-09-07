@@ -48,7 +48,7 @@ class OrcaTypoProcessor:
             self.detector.load_model(full_filename)
             self.word_max_len = 10
 
-    def process(self, sent: Text, non_typo_threshold: float = None, do_normalize: bool = True):
+    def process(self, sent: Text, typo_threshold: float = 0.8, non_typo_threshold: float = None, do_normalize: bool = False):
         if do_normalize:
             sent = normalize_unicode(sent)
 
@@ -72,28 +72,32 @@ class OrcaTypoProcessor:
 
             # if predicted as typo
             if pred == 1 or pred == 2:
-                # defense logic
-                if defense_pattern.findall(sent_splitted[i]):
-                    outp.append(sent_splitted[i])
-                else:
-                    # 띄어쓰기로 인해 분리된 case
-                    if i < len(preds)-1:
-                        repl = self.corrector.infer(sent_splitted[i])
-                        repl_nextToken = repl + sent_splitted[i+1]
-                        repl_bi = self.corrector.infer(repl_nextToken)
-                        if repl_bi != repl_nextToken:
-                            repl = repl_bi[:len(repl)]
-                        outp.append(repl)
+                if pr >= typo_threshold:
+                    print(pr)
+                    # defense logic
+                    if defense_pattern.findall(sent_splitted[i]):
+                        outp.append(sent_splitted[i])
                     else:
-                        repl = self.corrector.infer(sent_splitted[i])
-                        if (sent_splitted[i][-1] in end_marks) and (repl[-1] not in end_marks):
-                            repl += sent_splitted[i][-1]
-                        outp.append(repl)
+                        # 띄어쓰기로 인해 분리된 case
+                        if i < len(preds)-1:
+                            repl = self.corrector.infer(sent_splitted[i])
+                            repl_nextToken = repl + sent_splitted[i+1]
+                            repl_bi = self.corrector.infer(repl_nextToken)
+                            if repl_bi != repl_nextToken:
+                                repl = repl_bi[:len(repl)]
+                            outp.append(repl)
+                        else:
+                            repl = self.corrector.infer(sent_splitted[i])
+                            if (sent_splitted[i][-1] in end_marks) and (repl[-1] not in end_marks):
+                                repl += sent_splitted[i][-1]
+                            outp.append(repl)
+                else:
+                    outp.append(sent_splitted[i])
             else:
                 outp.append(sent_splitted[i])
         return ' '.join(outp)
 
-    def _infer_detection(self, sent: Text, non_typo_threshold: float = None):
+    def _infer_detection(self, sent: Text, typo_threshold: float = 0.8, non_typo_threshold: float = None):
         sent_splitted = sent.split(' ')
         probs, preds = self.detector.infer(sent=sent, max_word_len=self.word_max_len)
         probs, preds = probs[0], preds[0]
@@ -106,7 +110,8 @@ class OrcaTypoProcessor:
             if len(token) <= 1:
                 continue
             if pred == 1 or pred == 2:
-                outp.append({'word': sent_splitted[i], 'position': i})
+                if pr >= typo_threshold:
+                    outp.append({'word': sent_splitted[i], 'position': i})
             elif pred == 0 and non_typo_threshold:
                 if pr <= non_typo_threshold:
                     outp.append({'word': sent_splitted[i], 'position': i})
